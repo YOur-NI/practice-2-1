@@ -1,65 +1,87 @@
 import { describe, it, expect } from "vitest";
-import { createBookFromForm } from "../src/tasks/task4-integration";
-import type { Book } from "../src/types";
+import {
+  filterByAuthor,
+  filterByMinYear,
+  filterByMinRating,
+  applyFilters,
+} from "../src/task3-filters";
+import type { Book } from '../src/task1-types';
 
-describe("Task 4: Интеграция с DOM", () => {
-  it("createBookFromForm должен создавать книгу из FormData", () => {
-    const formData = new FormData();
-    formData.append("title", "New Book");
-    formData.append("authors", "Author One, Author Two");
-    formData.append("year", "2024");
-    formData.append("rating", "4.5");
+describe("Task 3: Фильтрация", () => {
+  const books: Book[] = [
+    { id: "1", title: "TS Guide", authors: ["John Doe", "Jane"], year: 2023, rating: 4.5 },
+    { id: "2", title: "JS Basics", authors: ["Alice"], year: 2020, rating: 3.0 },
+    { id: "3", title: "Advanced TS", authors: ["John Doe"], year: 2022, rating: 5.0 },
+    { id: "4", title: "Old Book", authors: ["Bob"], year: 2015 },
+  ];
 
-    const book = createBookFromForm(formData);
+  describe("filterByAuthor", () => {
+    it("должен находить книги по имени автора", () => {
+      const filter = filterByAuthor("John Doe");
+      const result = books.filter(filter);
+      expect(result.length).toBe(2);
+      expect(result.map((b) => b.id)).toEqual(["1", "3"]);
+    });
 
-    expect(book.title).toBe("New Book");
-    expect(book.authors).toEqual(["Author One", "Author Two"]);
-    expect(book.year).toBe(2024);
-    expect(book.rating).toBe(4.5);
-    expect(typeof book.id).toBe("string");
-    expect(book.id.length).toBeGreaterThan(0);
+    it("должен возвращать пустой массив если автор не найден", () => {
+      const filter = filterByAuthor("Nobody");
+      expect(books.filter(filter).length).toBe(0);
+    });
+
+    it("должен работать с частичным совпадением (опционально)", () => {
+      const filter = filterByAuthor("John");
+      const result = books.filter(filter);
+      expect(result.length).toBe(2);
+    });
   });
 
-  it("createBookFromForm должен работать без опциональных полей", () => {
-    const formData = new FormData();
-    formData.append("title", "Minimal Book");
-    formData.append("authors", "Solo Author");
+  describe("filterByMinYear", () => {
+    it("должен фильтровать книги по минимальному году", () => {
+      const filter = filterByMinYear(2022);
+      const result = books.filter(filter);
+      expect(result.length).toBe(2);
+      expect(result.map((b) => b.id)).toEqual(["1", "3"]);
+    });
 
-    const book = createBookFromForm(formData);
-
-    expect(book.title).toBe("Minimal Book");
-    expect(book.authors).toEqual(["Solo Author"]);
-    expect(book.year).toBeUndefined();
-    expect(book.rating).toBeUndefined();
+    it("должен исключать книги без года", () => {
+      const filter = filterByMinYear(2000);
+      const result = books.filter(filter);
+      expect(result.find((b) => b.id === "4")).toBeUndefined();
+    });
   });
 
-  it("createBookFromForm должен генерировать уникальный id", () => {
-    const formData1 = new FormData();
-    formData1.append("title", "Book 1");
-    formData1.append("authors", "A");
+  describe("filterByMinRating", () => {
+    it("должен фильтровать книги по рейтингу", () => {
+      const filter = filterByMinRating(4.0);
+      const result = books.filter(filter);
+      expect(result.length).toBe(2);
+      expect(result.map((b) => b.id)).toEqual(["1", "3"]);
+    });
 
-    const formData2 = new FormData();
-    formData2.append("title", "Book 2");
-    formData2.append("authors", "B");
-
-    const book1 = createBookFromForm(formData1);
-    const book2 = createBookFromForm(formData2);
-
-    expect(book1.id).not.toBe(book2.id);
+    it("должен исключать книги без рейтинга", () => {
+      const filter = filterByMinRating(1.0);
+      const result = books.filter(filter);
+      expect(result.find((b) => b.id === "4")).toBeUndefined();
+    });
   });
 
-  it("createBookFromForm должен преобразовывать year и rating в числа", () => {
-    const formData = new FormData();
-    formData.append("title", "Test");
-    formData.append("authors", "Test Author");
-    formData.append("year", "2020");
-    formData.append("rating", "3.5");
+  describe("applyFilters", () => {
+    it("должен применять несколько фильтров одновременно", () => {
+      const filters = [filterByAuthor("John Doe"), filterByMinYear(2022)];
+      const result = applyFilters(books, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].id).toBe("3");
+    });
 
-    const book = createBookFromForm(formData);
+    it("должен вернуть все книги если фильтров нет", () => {
+      const result = applyFilters(books, []);
+      expect(result.length).toBe(books.length);
+    });
 
-    expect(typeof book.year).toBe("number");
-    expect(book.year).toBe(2020);
-    expect(typeof book.rating).toBe("number");
-    expect(book.rating).toBe(3.5);
+    it("должен вернуть пустой массив если фильтры несовместимы", () => {
+      const filters = [filterByMinYear(2023), filterByMinRating(5.0)];
+      const result = applyFilters(books, filters);
+      expect(result.length).toBe(0);
+    });
   });
 });

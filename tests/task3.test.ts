@@ -4,8 +4,8 @@ import {
   filterByMinYear,
   filterByMinRating,
   applyFilters,
-} from "../src/tasks/task3-filters";
-import type { Book } from "../src/types";
+} from "../src/task3-filters";
+import type { Book } from '../src/task1-types';
 
 describe("Task 3: Фильтрация", () => {
   const books: Book[] = [
