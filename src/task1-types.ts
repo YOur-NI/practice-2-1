@@ -9,11 +9,11 @@
 //   - year (number, опционально)
 //   - rating (number от 0 до 5, опционально)
 export interface Book {
-    id:string,
-    title : string;
+    readonly id: string;
+    title: string;
     authors: string[];
-    year?:number; 
-    rating?:number;
+    year?: number;
+    rating?: number;
 }
 
 // TODO 2: Объявите тип Catalog как словарь: ключ — id книги, значение — Book
